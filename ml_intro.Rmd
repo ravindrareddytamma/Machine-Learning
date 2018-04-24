@@ -1,0 +1,77 @@
+---
+title: "Intro_Machine_Learning"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Data Preprocessing
+```{r}
+adv = read.csv('e:/ml/Advertising.csv')
+names(adv)
+# Identify percentage of missing values
+colSums(is.na(adv)) / nrow(adv) * 100
+
+# Check for outliers
+boxplot(adv$newspaper)
+
+# Method 1
+adv_training = adv[1:162,]
+adv_testing = adv[163:200,]
+
+# Method 2: Randomly sampling with replacement
+sample(c(1,2,3,4,5,6), 2)
+
+adv_training = adv[sample(seq(1,nrow(adv)), 162),]
+adv_testing = adv[sample(seq(1,nrow(adv)), 38),]
+
+names(adv_testing)
+dim(adv_testing)
+
+# Feature selection
+# Use all input variables -> TV, Newspaper, Radio
+
+# Fit a model
+adv_model = lm(sales~TV+radio+newspaper, data=adv_training)
+adv_model
+
+# Predict sales for testing data set
+adv_testing$sales_pred = predict(adv_model, adv_testing[,c('TV', 'radio', 'newspaper')])
+View(adv_testing)
+
+# Calculate error row wise
+adv_testing$error = adv_testing$sales - adv_testing$sales_pred
+View(adv_testing)
+
+# Calculate squared error
+adv_testing$sqr_error = adv_testing$error ^ 2
+View(adv_testing)
+
+sum(adv_testing$sqr_error)  
+
+{{plot(adv_testing$sales, type='l')
+  lines(adv_testing$sales_pred, col='red')}}
+```
+
+```{r}
+bank = read.csv('bank.csv', sep=';')
+View(bank)
+
+bank_training = bank[sample(seq(1,nrow(bank)), 3616),]
+bank_testing = bank[sample(seq(1,nrow(bank)), 4521-3616),]
+
+library(tree)
+library(dplyr)
+
+bank_model = tree(y~., data=bank_training)
+
+
+probs = as.data.frame(predict(bank_model, bank_testing %>% select(-y)))
+names(probs)
+probs$predict = if_else(probs$no > probs$yes, 'no', 'yes')
+bank_testing$predicted = probs$predict
+acc = sum(bank_testing$y == bank_testing$predicted) / nrow(bank_testing) * 100
+```
+
