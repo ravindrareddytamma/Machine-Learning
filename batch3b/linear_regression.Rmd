@@ -1,0 +1,54 @@
+---
+title: "Linear Regression"
+author: "Kathirmani Sukumar"
+date: "April 26, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(plotly)
+library(ggplot2)
+adv = read.csv('Advertising.csv')
+names(adv)
+ggplot(adv, aes(x=TV, y=sales)) + geom_point() + geom_smooth(method = 'lm')
+```
+
+```{r}
+adv_training = adv[sample(seq(1,200), 0.8*nrow(adv)),]
+adv_testing = adv[sample(seq(1,200), 0.2*nrow(adv)),]
+adv_model = lm(sales~TV, data=adv_training)
+adv_model
+```
+
+```{r}
+mse = function(x, y, m, c){
+  yhat = m * x + c
+  error = sum((y - yhat) ^ 2) / length(x)
+  return (error)
+}
+
+iterations = 100
+cspace = seq(1,15,length.out = iterations)
+mspace = seq(-0.6,0.6, length.out = iterations)
+zspace = c()
+for (i in mspace){
+  for (j in cspace){
+    zspace = c(zspace, mse(adv_training$TV,
+                           adv_training$sales,
+                           i, j))
+  }
+}
+zmat = matrix(zspace, iterations, iterations)
+library(plotly)
+plot_ly(x = mspace, y = cspace, z = zmat) %>% add_surface()
+```
+
+```{r}
+
+```
+

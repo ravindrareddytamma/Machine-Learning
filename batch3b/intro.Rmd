@@ -1,0 +1,95 @@
+---
+title: "Introduction to Machine Learning"
+author: "Kathirmani Sukumar"
+date: "April 25, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+adv = read.csv('e:/ml/Advertising.csv')
+names(adv)
+adv = adv %>% select(-X)
+
+# Check for missing values
+colSums(is.na(adv))
+
+# Check for outliers
+boxplot(adv$newspaper)
+
+# Feature selection
+cor(adv)
+
+```
+
+
+```{r}
+## Split data in training & testing
+adv_training = adv[sample(seq(1,200), 0.8*nrow(adv)),]
+adv_testing = adv[sample(seq(1,200), 0.2*nrow(adv)),]
+dim(adv_training)                  
+dim(adv_testing)
+
+```
+
+```{r}
+## Fitting model
+adv_model = lm(sales~TV+radio, data=adv_training)
+adv_model
+summary(adv_model)
+```
+## Predict for test data
+```{r}
+
+View(adv_testing)
+adv_testing$sales_predicted = predict(adv_model, adv_testing %>% select(-sales))
+View(adv_testing)
+
+{{plot(adv_testing$sales, type='l')
+  lines(adv_testing$sales_predicted, col='red')
+}}
+
+## Calculate SSE
+adv_testing$error = adv_testing$sales - adv_testing$sales_predicted
+adv_testing$error_square = adv_testing$error ^ 2
+sum(adv_testing$error_square)
+```
+
+
+```{r}
+library(tree)
+bank = read.csv('e:/datasets/bank-full.csv', sep=';')
+bank_training = bank[sample(seq(1,nrow(bank)), 0.8*nrow(bank)),]
+bank_testing = bank[sample(seq(1,nrow(bank)), 0.2*nrow(bank)),]
+bank_model = tree(y~., data=bank)
+pred_response = predict(bank_model, bank_testing %>% select(-y))
+pred_response = as.data.frame(pred_response)
+pred_response$y_predicted = if_else(pred_response$no>pred_response$yes, 'no', 'yes')
+bank_testing$y_predicted = pred_response$y_predicted
+bank_testing$error = bank_testing$y != bank_testing$y_predicted
+100 - sum(bank_testing$error) / nrow(bank_testing) * 100
+```
+
+### Clustering
+```{r}
+data('iris')
+View(iris)
+
+iris_new = iris %>% select(-Species)
+View(iris_new)
+
+iris_model = kmeans(iris_new, centers = 3)
+iris_model
+table(iris_model$cluster)
+```
+
+
+```{r}
+
+```
+
