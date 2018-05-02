@@ -75,3 +75,18 @@ bank_testing$predicted = probs$predict
 acc = sum(bank_testing$y == bank_testing$predicted) / nrow(bank_testing) * 100
 ```
 
+
+
+```{r}
+data(iris)
+View(iris)
+library(dplyr)
+iris_new = iris %>% select(-Species)
+View(iris_new)
+iris_model = kmeans(iris_new, centers=5)
+table(iris_model$cluster)
+iris_model
+```
+
+
+

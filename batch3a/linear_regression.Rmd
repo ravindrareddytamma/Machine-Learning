@@ -1,0 +1,147 @@
+---
+title: "Linear Regression"
+author: "Kathirmani Sukumar"
+date: "April 30, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(plotly)
+adv = read.csv('../../Advertising.csv')
+adv_training = adv[sample(seq(1,nrow(adv)), 162),]
+adv_testing = adv[sample(seq(1,nrow(adv)), 38),]
+
+# Fit a model
+adv_model = lm(sales~TV, data=adv_training)
+adv_model
+```
+
+```{r}
+
+m = 0.06
+c = 1
+
+sales_predicted = m * adv_training$TV + c
+error = sum((adv_training$sales - sales_predicted) ^ 2) / nrow(adv_training)
+#error
+
+{{plot(adv_training$TV, adv_training$sales)
+  lines(adv_training$TV,sales_predicted)}}
+```
+
+
+```{r}
+m = seq(-1, 1, length.out = 100)
+e = c()
+for ( i in m){
+  sales_predicted = i * adv_training$TV + c
+  error = sum((adv_training$sales - sales_predicted) ^ 2) / nrow(adv_training)
+  e = c(e, error)
+}
+plot(e)
+
+which(e==min(e))
+
+m[54]
+```
+
+
+
+```{r}
+m = seq(-1, 1, length.out = 100)
+c = seq(-10, 10, length.out = 100)
+
+m_rep = c()
+c_rep = c()
+e = c()
+for (i in m){
+  for (j in c){
+    sales_predicted = i * adv_training$TV + j
+    error = sum((adv_training$sales - sales_predicted) ^ 2) 
+    m_rep = c(m_rep, i)
+    c_rep = c(c_rep, j)
+    e = c(e, error)
+  }
+}
+
+models = data.frame(slope=m_rep, intercept=c_rep, mse=e)
+dim(models)
+
+models %>% arrange(mse) %>% head(10)
+```
+
+
+```{r}
+library(plotly)
+mspace = m
+cspace = c
+zspace = matrix(e, nrow = length(m), ncol=length(c))
+
+plot_ly(x=mspace, y=cspace, z=zspace) %>% add_surface()
+```
+
+```{r}
+m1 = seq(-1, 1, length.out = 100)
+m2 = seq(-1, 1, length.out = 100)
+c = seq(-10, 10, length.out = 100)
+
+m1_rep = c()
+m2_rep = c()
+c_rep = c()
+e = c()
+for (i in m1){
+  for (j in m2){
+    for (k in c){
+      sales_predicted = i * adv_training$TV + j*adv_training$radio + k
+      error = sum((adv_training$sales - sales_predicted) ^ 2) / nrow(adv_training)
+      m1_rep = c(m1_rep, i)
+      m2_rep = c(m2_rep, j)
+      c_rep = c(c_rep, k)
+      e = c(e, error)
+    }
+    
+  }
+}
+
+```
+
+## Gradient Descent
+```{r}
+x = rnorm(100)
+y = 0.05 * x
+df_xy = data.frame(x=x, y=y)
+plot(x, y)
+cor(x, y)
+library(dplyr)
+
+m = 1000
+alpha = 0.01
+n_iterations = 1000
+errors = c()
+m_vals = c()
+for (i in seq(1, n_iterations)){
+  m_vals = c(m_vals, m)
+  curr_err = sum((y - (m*x))^2) / length(x)
+  errors = c(errors, curr_err)
+  df_xy = df_xy %>% mutate(xy=x * y)
+  df_xy = df_xy %>% mutate(mx_square= m * (x^2))
+  df_xy = df_xy %>% mutate(xy_mx2 = xy - mx_square)
+  sigma_xy_mx2 = sum(df_xy$xy_mx2)
+  m_gradident = -2 / length(x) * sigma_xy_mx2
+  m = m - alpha * m_gradident
+}
+print(m)
+{{plot(m_vals, errors)
+lines(m_vals, errors)}}
+
+
+
+```
+
+
